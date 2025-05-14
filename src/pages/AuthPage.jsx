@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { FaAirbnb, FaFacebook, FaGoogle, FaApple, FaEnvelope } from 'react-icons/fa'
+import { FaHome, FaFacebook, FaGoogle, FaApple, FaEnvelope } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import supabase from '../supabase/supabase'
 import { signInWithGoogle } from '../supabase/supabase'
@@ -86,37 +86,52 @@ const handleSubmit = async (e) => {
 
 
   const handleResetPassword = async (e) => {
-    e.preventDefault()
-    if (!resetEmail) {
-      toast.error('Please enter your email address')
-      return
-    }
+  e.preventDefault();
 
-    setLoading(true)
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-
-      if (error) throw error
-
-      toast.success('Password reset link sent to your email!')
-      setShowResetPassword(false)
-      setResetEmail('')
-    } catch (err) {
-      toast.error(err.message || 'Failed to send reset password email')
-    } finally {
-      setLoading(false)
-    }
+  if (!resetEmail) {
+    toast.error('Please enter your email address');
+    return;
   }
+
+  setLoading(true); // Set loading only once at the beginning
+
+  try {
+    // Step 1: Check if user exists
+    const { data: exists, error: checkError } = await supabase.rpc('check_user_exists', {
+      email_input: resetEmail,
+    });
+
+    if (checkError) throw checkError;
+
+    if (!exists) {
+      toast.error('No account found with this email. Please sign up first.');
+      return;
+    }
+
+    // Step 2: Proceed with reset
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) throw error;
+
+    toast.success('Password reset link sent to your email!');
+    setShowResetPassword(false);
+    setResetEmail('');
+  } catch (err) {
+    toast.error(err.message || 'Failed to send reset password email');
+  } finally {
+    setLoading(false); // Loading stops whether it fails or succeeds
+  }
+};
 
   return (
     <div className="flex justify-center items-center min-h-[80vh] px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <FaAirbnb className="text-airbnb-primary text-5xl mx-auto mb-4" />
+          <FaHome className="text-airbnb-primary text-4xl mx-auto mb-4" />
           <h1 className="text-2xl font-bold">
-            {showResetPassword ? 'Reset Password' : 'Log in to Airbnb'}
+            {showResetPassword ? 'Reset Password' : 'Log in to Homyfy'}
           </h1>
         </div>
 
