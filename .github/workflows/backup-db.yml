@@ -3,13 +3,16 @@ name: Scheduled Supabase DB Backup
 on:
   schedule:
     - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:      # Allow manual run
+  workflow_dispatch:      # Manual trigger
 
 jobs:
   backup:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install postgresql-client -y
 
