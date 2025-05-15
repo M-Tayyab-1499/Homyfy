@@ -1,0 +1,29 @@
+name: Scheduled Supabase DB Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:  
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install PostgreSQL client tools
+        run: sudo apt-get update && sudo apt-get install postgresql-client -y
+
+      - name: Dump Supabase PostgreSQL database
+        env:
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
+        run: |
+          pg_dump --format=custom --file=backup.dump
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: supabase-db-backup-${{ github.run_id }}
+          path: backup.dump
