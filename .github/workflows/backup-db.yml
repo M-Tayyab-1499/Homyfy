@@ -3,8 +3,8 @@ name: Scheduled Supabase DB Backup
 on:
   schedule:
     - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:      # Manual trigger
-  
+  workflow_dispatch:
+
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -13,38 +13,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install PostgreSQL client and dnsutils
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client dnsutils
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install postgresql-client -y
 
-      - name: Resolve IPv6 address of DB host
-        id: resolve_ip6
-        run: |
-          IPV6=$(dig +short AAAA ${{ secrets.SUPABASE_DB_HOST }} | head -n1)
-          if [ -z "$IPV6" ]; then
-            echo "No IPv6 address found for ${{ secrets.SUPABASE_DB_HOST }}"
-            exit 1
-          fi
-          echo "IPV6=$IPV6" >> $GITHUB_OUTPUT
-
-      - name: Test connectivity IPv6
-        run: |
-          ping6 -c 4 ${{ steps.resolve_ip6.outputs.IPV6 }} || echo "IPv6 Ping failed"
-          nc -6 -zv ${{ steps.resolve_ip6.outputs.IPV6 }} 5432 || echo "IPv6 Port 5432 not reachable"
-
-      - name: Dump Supabase PostgreSQL database (IPv6)
+      - name: Dump Supabase PostgreSQL database
         env:
-          PGHOST: ${{ steps.resolve_ip6.outputs.IPV6 }}
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGPORT: ${{ secrets.SUPABASE_DB_PORT }}
           PGUSER: ${{ secrets.SUPABASE_DB_USER }}
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
           PGSSLMODE: require
         run: |
-          pg_dump --host=$PGHOST --port=5432 --username=$PGUSER --dbname=$PGDATABASE --file=backup.dump --format=custom --no-password
+          pg_dump --host=$PGHOST --port=$PGPORT --username=$PGUSER --dbname=$PGDATABASE --file=backup.dump --format=custom
 
       - name: Upload backup artifact
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v3
         with:
           name: supabase-db-backup
           path: backup.dump
