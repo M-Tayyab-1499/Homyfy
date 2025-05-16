@@ -28,7 +28,7 @@ jobs:
           pg_dump --host=$PGHOST --port=$PGPORT --username=$PGUSER --dbname=$PGDATABASE --file=backup.dump --format=custom
 
       - name: Upload backup artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: supabase-db-backup
           path: backup.dump
