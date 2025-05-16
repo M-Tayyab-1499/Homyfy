@@ -22,8 +22,10 @@ jobs:
          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
          PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
+         PGSSLMODE: require
         run: |
-         pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password --sslmode=require
+         pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password
+
 
 
       - name: Upload backup artifact
