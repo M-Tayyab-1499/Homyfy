@@ -1,10 +1,3 @@
-name: Scheduled Supabase DB Backup
-
-on:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:      # Manual trigger
-
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -13,27 +6,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install postgresql-client -y
-
-      - name: Resolve IPv4 address of DB host
-        id: resolve_ip
+      - name: Install PostgreSQL client and dnsutils
         run: |
-          IPV4=$(dig +short A ${{ secrets.SUPABASE_DB_HOST }} | head -n1)
-          if [ -z "$IPV4" ]; then
-            echo "No IPv4 address found for ${{ secrets.SUPABASE_DB_HOST }}"
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client dnsutils
+
+      - name: Resolve IPv6 address of DB host
+        id: resolve_ip6
+        run: |
+          IPV6=$(dig +short AAAA ${{ secrets.SUPABASE_DB_HOST }} | head -n1)
+          if [ -z "$IPV6" ]; then
+            echo "No IPv6 address found for ${{ secrets.SUPABASE_DB_HOST }}"
             exit 1
           fi
-          echo "IPV4=$IPV4" >> $GITHUB_OUTPUT
+          echo "IPV6=$IPV6" >> $GITHUB_OUTPUT
 
-      - name: Test connectivity
+      - name: Test connectivity IPv6
         run: |
-          ping -c 4 ${{ steps.resolve_ip.outputs.IPV4 }} || echo "Ping failed"
-          nc -zv ${{ steps.resolve_ip.outputs.IPV4 }} 5432 || echo "Port 5432 not reachable"
+          ping6 -c 4 ${{ steps.resolve_ip6.outputs.IPV6 }} || echo "IPv6 Ping failed"
+          nc -6 -zv ${{ steps.resolve_ip6.outputs.IPV6 }} 5432 || echo "IPv6 Port 5432 not reachable"
 
-      - name: Dump Supabase PostgreSQL database
+      - name: Dump Supabase PostgreSQL database (IPv6)
         env:
-          PGHOST: ${{ steps.resolve_ip.outputs.IPV4 }}
+          PGHOST: ${{ steps.resolve_ip6.outputs.IPV6 }}
           PGUSER: ${{ secrets.SUPABASE_DB_USER }}
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
