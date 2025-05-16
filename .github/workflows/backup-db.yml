@@ -16,22 +16,21 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install postgresql-client -y
 
+      - name: Disable IPv6
+        run: sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+
       - name: Dump Supabase PostgreSQL database
         env:
-         PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
-         PGUSER: ${{ secrets.SUPABASE_DB_USER }}
-         PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-         PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
-         PGSSLMODE: require
+          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
+          PGSSLMODE: require
         run: |
-          pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password --no-sslcompression --ipv4
-
-
-
+          pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password
 
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: supabase-db-backup
           path: backup.dump
-
