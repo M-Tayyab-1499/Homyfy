@@ -24,7 +24,8 @@ jobs:
          PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
          PGSSLMODE: require
         run: |
-         pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password
+          pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password --no-sslcompression --ipv4
+
 
 
 
