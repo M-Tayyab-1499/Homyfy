@@ -16,26 +16,30 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install postgresql-client -y
 
-      - name: Disable IPv6
+      - name: Resolve IPv4 address of DB host
+        id: resolve_ip
         run: |
-          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
-          sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+          IPV4=$(dig +short A ${{ secrets.SUPABASE_DB_HOST }} | head -n1)
+          if [ -z "$IPV4" ]; then
+            echo "No IPv4 address found for ${{ secrets.SUPABASE_DB_HOST }}"
+            exit 1
+          fi
+          echo "IPV4=$IPV4" >> $GITHUB_OUTPUT
 
-      - name: Test network connectivity
+      - name: Test connectivity
         run: |
-          ping -c 4 ${{ secrets.SUPABASE_DB_HOST }} || echo "Ping failed"
-          nc -zv ${{ secrets.SUPABASE_DB_HOST }} 5432 || echo "Port 5432 not reachable"
+          ping -c 4 ${{ steps.resolve_ip.outputs.IPV4 }} || echo "Ping failed"
+          nc -zv ${{ steps.resolve_ip.outputs.IPV4 }} 5432 || echo "Port 5432 not reachable"
 
       - name: Dump Supabase PostgreSQL database
         env:
-          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+          PGHOST: ${{ steps.resolve_ip.outputs.IPV4 }}
           PGUSER: ${{ secrets.SUPABASE_DB_USER }}
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
           PGSSLMODE: require
         run: |
-          pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password
+          pg_dump --host=$PGHOST --port=5432 --username=$PGUSER --dbname=$PGDATABASE --file=backup.dump --format=custom --no-password
 
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4.6.2
