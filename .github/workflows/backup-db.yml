@@ -18,12 +18,13 @@ jobs:
 
       - name: Dump Supabase PostgreSQL database
         env:
-          PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
-          PGUSER: ${{ secrets.SUPABASE_DB_USER }}
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
+         PGHOST: ${{ secrets.SUPABASE_DB_HOST }}
+         PGUSER: ${{ secrets.SUPABASE_DB_USER }}
+         PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+         PGDATABASE: ${{ secrets.SUPABASE_DB_NAME }}
         run: |
-          pg_dump --format=custom --file=backup.dump
+         pg_dump --host=${{ secrets.SUPABASE_DB_HOST }} --port=5432 --username=${{ secrets.SUPABASE_DB_USER }} --dbname=${{ secrets.SUPABASE_DB_NAME }} --file=backup.dump --format=custom --no-password --sslmode=require
+
 
       - name: Upload backup artifact
         uses: actions/upload-artifact@v4.6.2
