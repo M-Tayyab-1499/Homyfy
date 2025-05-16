@@ -17,7 +17,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install postgresql-client -y
 
       - name: Disable IPv6
-        run: sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+        run: |
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+          sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+
+      - name: Test network connectivity
+        run: |
+          ping -c 4 ${{ secrets.SUPABASE_DB_HOST }} || echo "Ping failed"
+          nc -zv ${{ secrets.SUPABASE_DB_HOST }} 5432 || echo "Port 5432 not reachable"
 
       - name: Dump Supabase PostgreSQL database
         env:
