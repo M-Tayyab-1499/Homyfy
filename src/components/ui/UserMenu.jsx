@@ -102,13 +102,6 @@ function UserMenu({ onClose }) {
         </div>
 
         <div className="border-t border-gray-200">
-          <Link 
-            to="/help" 
-            className="block w-full text-left px-4 py-3 hover:bg-gray-100"
-            onClick={onClose}
-          >
-            Help
-          </Link>
           {currentUser && (
             <button 
               className="w-full text-left px-4 py-3 hover:bg-gray-100"
