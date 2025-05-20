@@ -10,14 +10,14 @@ function UserMenu({ onClose }) {
 
   if (loading) return null
 
-  const handleLogout = async () => {
+ const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
       onClose()
       toast.success('Logged out successfully!')
       setTimeout(() => {
-        window.location.reload()
-      }, 300)
+      navigate('/') 
+    }, 300)
     } catch (error) {
       toast.error('Error logging out: ' + error.message)
     }
